@@ -1,0 +1,273 @@
+CREATE TABLE public.users
+(
+  user_id serial,
+  first_name_rus character varying(255) NOT NULL,
+  second_name_rus character varying(255) NOT NULL,
+  last_name_rus character varying(255) NOT NULL,
+  first_name_ukr character varying(255) NOT NULL,
+  second_name_ukr character varying(255) NOT NULL,
+  last_name_ukr character varying(255) NOT NULL,
+  first_name_eng character varying(255) NOT NULL,
+  second_name_eng character varying(255) NOT NULL,
+  last_name_eng character varying(255) NOT NULL,
+  born_date date,
+  contact json,
+  links json,
+  CONSTRAINT user_id_primary PRIMARY KEY (user_id)
+)
+WITH (
+OIDS = FALSE
+);
+
+CREATE TABLE public.groups
+(
+  group_id serial,
+  num character varying(255) NOT NULL,
+  specialty character varying(255) NOT NULL,
+  year integer NOT NULL,
+  CONSTRAINT group_id_primary PRIMARY KEY (group_id)
+)
+WITH (
+OIDS = FALSE
+);
+
+CREATE TYPE Role AS ENUM ('STUDENT_ONE', 'CLASS_LEADER', 'DEPUTY_CLASS_LEADER', 'PROFESSIONAL_ORGANIZER');
+
+CREATE TABLE public.students
+(
+  student_id serial,
+  user_id integer NOT NULL,
+  group_id integer NOT NULL,
+  dept integer NOT NULL,
+  doc_id integer NOT NULL,
+  book_id integer NOT NULL,
+  year integer NOT NULL,
+  type Role NOT NULL,
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  CONSTRAINT student_id_primary PRIMARY KEY (student_id),
+  CONSTRAINT group_id_foreign FOREIGN KEY (group_id)
+  REFERENCES public.groups (group_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION,
+  CONSTRAINT user_id_foreign FOREIGN KEY (user_id)
+  REFERENCES public.users (user_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION
+)
+WITH (
+OIDS = FALSE
+);
+
+CREATE TYPE Job AS ENUM ('ASSISTANT', 'SENIOR_LECTURER','DOCENT', 'PROFESSOR');
+
+CREATE TABLE public.teachers
+(
+  teacher_id serial,
+  user_id integer NOT NULL,
+  dept integer NOT NULL,
+  job Job NOT NULL,
+  CONSTRAINT teacher_primary_key PRIMARY KEY (teacher_id),
+  CONSTRAINT user_id_foreign FOREIGN KEY (user_id)
+  REFERENCES public.users (user_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION
+)
+WITH (
+OIDS = FALSE
+);
+
+
+CREATE TYPE ControlForm AS ENUM ('EXAM', 'DIFF_CREDIT', 'CREDIT');
+CREATE TYPE ControlApproach AS ENUM ('NONE','COMP_GRAPH', 'COMP_GRAPH_WORK','COURSE_PROJECT','COURSE_WORK');
+
+CREATE TABLE public.courses
+(
+  course_id serial,
+  teacher_id integer NOT NULL,
+  name character varying(255) NOT NULL,
+  semester integer NOT NULL,
+  control_form ControlForm NOT NULL,
+  lectures_num integer NOT NULL,
+  labs_num integer,
+  pract_num integer,
+  modules_num integer,
+  control_approach ControlApproach NOT NULL,
+  CONSTRAINT course_id_primary PRIMARY KEY (course_id),
+  CONSTRAINT user_id_foreign FOREIGN KEY (teacher_id)
+  REFERENCES public.teachers (teacher_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION
+)
+WITH (
+OIDS = FALSE
+);
+
+CREATE TYPE Pass AS ENUM ('DROPPED', 'PASSED', 'FAILED');
+
+CREATE TABLE public.studies
+(
+  user_id integer NOT NULL,
+  student_id integer NOT NULL,
+  course_id integer NOT NULL,
+  modules json not null,
+  lectures json NOT NULL,
+  labs json,
+  pract json,
+  control json NOT NULL ,
+  mark integer NOT NULL ,
+  pass Pass NOT NULL ,
+  teacher_id integer NOT NULL ,
+  CONSTRAINT user_id_foreign FOREIGN KEY (user_id)
+  REFERENCES public.users (user_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION,
+  CONSTRAINT student_id_foreign FOREIGN KEY (student_id)
+  REFERENCES public.students (student_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION,
+  CONSTRAINT course_id_foreign FOREIGN KEY (course_id)
+  REFERENCES public.courses (course_id) MATCH SIMPLE
+  ON UPDATE NO ACTION
+  ON DELETE NO ACTION
+)
+WITH (
+OIDS = FALSE
+);
+
+INSERT INTO users (first_name_rus, second_name_rus, last_name_rus, first_name_ukr, second_name_ukr, last_name_ukr,
+                   first_name_eng, second_name_eng, last_name_eng, born_date, contact, links)
+VALUES
+  ('Илья', 'Игоревич','Быков','Ілля','Ігоревич','Биков','Ilya','Igorevich','Bykov','1997-07-17',
+           '{"phone":"+380506781212","email":"bykov_ilya@gmail.com","skype":"bykov1997"}',
+   '{"instagram":"ilya.bykov","vkontakte":"vk.com/id135532914"}'),
+
+  ('Ольга', 'Евгеньевна','Бойко','Ольга','Євгенівна','Бойко','Olga','Evgenivna','Boiko','1996-11-01',
+            '{"phone":"+380990645453", "email":"oboiko@gmail.com","skype":"olya_boiko"}',
+   '{"instagram":"olhaboiko_", "vkontakte":"vk.com/id298877441"}'),
+
+  ('Андрей', 'Павлович','Даншин','Андрій','Павлович','Даншин','Andrei','Pavlovich','Danshin','1996-06-17',
+             '{"phone":"+380500611056", "email":"andrewdan@gmail.com", "skype":"danshin"}',
+   '{"instagram":"andrei.danshyn", "vkontakte":"vk.com/scooterinho"}'),
+
+  ('Владислав', 'Игоревич','Дударев','Владислав','Ігоревич','Дударев','Vladislav','Igorevich','Dudarev','1997-01-27',
+                '{"phone":"+380991846553","email":"vdudarev@gmail.com","skype":"vdudarev"}',
+   '{"instagram":"dudarev", "vkontakte":"vk.com/id418543160"}'),
+
+  ('Дарья', 'Дмитриевна','Журавлёва','Дарія','Дмитріївна','Журавльова','Daria','Dmitrievna','Zhuravlyova','1997-03-28',
+            '{"phone":"+380991121087","email":"zhuravlyovad@gmail.com","skype":"daria_zhuravlyova"}',
+   '{"instagram":"dasha_zhu", "vkontakte":"vk.com/id94443474"}'),
+
+  ('Анна', 'Сергеевна','Кальченко','Ганна','Сергіївна','Кальченко','Hanna','Sergiivna','Kalchenko','1997-04-24',
+           '{"phone":"+380963089235","email":"apellsino@gmail.com","skype":"anka"}',
+   '{"instagram":"apellsino", "vkontakte":"vk.com/apellsino"}'),
+
+  ('Анна', 'Александровна','Куварина','Анна','Олександрівна','Куваріна','Anna','Aleksandrovna','Kuvarina','1997-02-16',
+           '{"phone":"+3809954572238","email":"annakuvarina@gmail.com","skype":"anna_kuvarina"}',
+   '{"instagram":"annk_1602", "vkontakte":"vk.com/id150545305"}'),
+
+  ('Константин', 'Александрович','Кухтинов','Костянтин','Олександрович','Кухтінов','Konstantin','Aleksandrovich','Kuhtinov','1996-08-02',
+                 '{"phone":"+380970506575","email":"kuhtinov@gmail.com","skype":"konstantin1996"}',
+   '{"instagram":"terrible.scavanger", "vkontakte":"vk.com/id12754567"}'),
+
+  ('Рахэб', 'Анатольевич','Литвиненко','Рахеб','Анатольєвич','Літвіненко','Rakheb','Anatolievich','Litvinenko','1996-07-20',
+            '{"phone":"+380506780550","email":"litvinenko@gmail.com","skype":"Pholish1"}',
+   '{"instagram":"rakheb_v", "vkontakte":"vk.com/x7darkvortex"}'),
+
+  ('Валерий', 'Игоревич','Полежай','Валерій','Ігоревич','Полежай','Valeriy','Igorevich','Polezhai','1997-08-16',
+              '{"phone":"+380664459090","email":"nativus@gmail.com","skype":"nativus"}',
+   '{"instagram":"valeoaeneus", "vkontakte":"vk.com/redheadgeek"}'),
+
+  ('Артём', 'Юрьевич','Харьков','Артем','Юрійович','Харьков','Artem','Yurievich','Kharkov','1996-09-08',
+            '{"phone":"+380504501223","email":"akharkov@gmail.com","skype":"kha_ant"}',
+   '{"instagram":"kharkov_ant","vkontakte": "vk.com/artem_ha"}'),
+
+  ('Никита', 'Альбертович','Щедания','Микита','Альбертович','Шеданія','Nikita','Albertovich','Shedaniya','1997-03-12',
+             '{"phone":"+380971232326","email":"shedaniya@gmail.com","skype":"nick_shed"}',
+   '{"instagram":"nickshaddy", "vkontakte":"vk.com/id82261532"}'),
+
+  ('Владислав','Дмитриевич','Ющук','Владислав','Дмитрійович','Ющук','Vladislav','Dmitrievich','Yushuk','1996-12-02',
+               '{"phone":"+380506788070","email":"blanknamed@gmail.com","skype":"blanknamed"}',
+   '{"instagram":"blanknamed_", "vkontakte":"vk.com/blanknamed"}'),
+
+  ('Алексей','Сергеевич','Рубель','Олексій','Сергійович','Рубель','Alexey','Sergeevich','Rubel',
+             '1991-02-15','{"phone":"+380506078980","email":"asrubel@gmail.com", "skype":"arubel"}',
+             '{"instagram":"","vkontakte":"vk.com/id135799864"}'),
+
+  ('Андрей','Сергеевич','Рубель','Андрій','Сергійович','Рубель','Andrei','Sergeevich','Rubel',
+            '1993-08-06','{"phone":"+380965013486","email":"andrei_rubel@gmail.com","skype":"andrei_rubel"}',
+            '{"instagram":"", "vkontakte":"vk.com/asrubel"}'),
+
+  ('Виктория','Валерьевна','Абрамова','Вікторія','Валеріївна','Абрамова','Viktoria','Valerievna','Abramova',
+              '1987-03-27','{"phone":"+380997605676","email":"viktoria_abramova@khai.edu", "skype":"vvabramova"}',
+              '{"instagram":"", "vkontakte":"vk.com/id23896057"}');
+
+INSERT INTO groups (num, specialty, year) VALUES ('549а', 'Телекоммуникации', '2018'),
+  ('539ст', 'Телекоммуникации', '2018');
+
+INSERT INTO students (user_id, group_id, dept, doc_id, book_id, "year", type, start_date, end_date) VALUES
+  ('1', '1', '5', '10272411', '1405205', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('2', '1', '5', '10272412', '1405206', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('3', '1', '5', '10272413', '1405207', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('4',' 1', '5', '10272414', '1405208', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('5', '1', '5', '10272415', '1405209', '2018', 'PROFESSIONAL_ORGANIZER', '2014-09-01', '2018-08-31'),
+  ('6', '1', '5', '10272416', '1405210', '2018', 'DEPUTY_CLASS_LEADER', '2014-09-01', '2018-08-31'),
+  ('7', '1', '5', '10272417', '1405211', '2018', 'CLASS_LEADER', '2014-09-01', '2018-08-31'),
+  ('8', '1', '5', '10272418', '1405212', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('9', '1', '5', '10272419', '1405213', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('10', '1', '5', '10272420', '1405214', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('11', '1', '5', '10272421', '1405215', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('12', '1', '5', '10272422', '1405216', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31'),
+  ('13', '1', '5', '10272423', '1405217', '2018', 'STUDENT_ONE', '2014-09-01', '2018-08-31');
+
+
+INSERT INTO teachers (user_id, dept, job) VALUES
+  ('14', '5', 'Доцент'),
+  ('15', '5', 'Ассистент'),
+  ('16', '5', 'Доцент');
+
+INSERT INTO courses (teacher_id, name, semester, control_form, lectures_num,
+                     labs_num, pract_num, modules_num, control_approach) VALUES
+  ('1','Оконечные устройства абонентского доступа','1', 'EXAM', '11', '8', null, '2', 'COMP_GRAPH'),
+  ('3','Радиорелейные и спутниковые системы связи', '2','DIFF_CREDIT','8',null,'4', null, 'COURSE_WORK');
+
+INSERT INTO studies (user_id,student_id, course_id, modules, lectures, labs, pract, control, mark, pass, teacher_id) VALUES
+  ('1','1','1','{"1":"33","2":"31"}','{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"3","7":"3","8":"0","9":"0","10":"0","11":"0"}',
+   '{"1":"25","2":"20","3":"20","4":"15","5":"15","6":"15","7":"15","8":"15"}', null, '30', '60', 'PASSED','1'),
+
+  ('2','2','1','{"1":"23","2":"27"}', '{"1":"6","2":"4","3":"1","4":"3","5":"6","6":"7","7":"5","8":"3","9":"8","10":"8","11":"5"}',
+   '{"1":"15","2":"15","3":"15","4":"15","5":"15","6":"15","7":"15","8":"15"}', null, '14', '60', 'PASSED', '1'),
+
+  ('3','3','1','{"1":"25","2":"43"}','{"1":"3","2":"3","3":"5","4":"3","5":"10","6":"10","7":"7","8":"10","9":"3","10":"10","11":"4"}',
+   '{"1":"15","2":"10","3":"10","4":"10","5":"10","6":"10","7":"10","8":"10"}', null, '19', '60', 'PASSED', '1'),
+
+  ('4','4','1','{"1":"17","2":"32"}', '{"1":"4","2":"0","3":"5","4":"0","5":"6","6":"7","7":"7","8":"6","9":"4","10":"10","11":"0"}',
+   '{"1":"25","2":"15","3":"15","4":"15","5":"15","6":"15","7":"15","8":"15"}', null, '12', '60', 'PASSED', '1'),
+
+  ('5','5','1','{"1":"23","2":"32"}','{"1":"3","2":"0","3":"0","4":"2","5":"0","6":"7","7":"0","8":"0","9":"0","10":"0","11":"0"}',
+   '{"1":"25","2":"20","3":"20","4":"18","5":"15","6":"15","7":"15","8":"15"}', null, '30', '60', 'PASSED', '1'),
+
+  ('6','6','1','{"1":"43","2":"59"}', '{"1":"6","2":"4","3":"3","4":"5","5":"6","6":"10","7":"10","8":"10","9":"10","10":"6","11":"8"}',
+   '{"1":"25","2":"20","3":"20","4":"20","5":"20","6":"20","7":"20","8":"20"}', null, '31', '94', 'PASSED', '1'),
+
+  ('7','7','1','{"1":"41","2":"33"}', '{"1":"6","2":"4","3":"0","4":"7","5":"0","6":"7","7":"10","8":"6","9":"10","10":"8","11":"10"}',
+   '{"1":"25","2":"20","3":"20","4":"20","5":"20","6":"25","7":"20","8":"25"}', null, '31', '87', 'PASSED', '1'),
+
+  ('8','8','1','{"1":"32","2":"49"}', '{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"0","7":"0","8":"0","9":"0","10":"0","11":"0"}',
+   '{"1":"25","2":"20","3":"20","4":"25","5":"25","6":"25","7":"20","8":"25"}',null, '54', '80', 'PASSED', '1'),
+
+  ('9','9','1','{"1":"38","2":"39"}', '{"1":"0","2":"6","3":"3","4":"5","5":"10","6":"9","7":"0","8":"0","9":"10","10":"6","11":"0"}',
+   '{"1":"15","2":"15","3":"15","4":"15","5":"10","6":"10","7":"10","8":"10"}', null, '14', '60', 'PASSED', '1'),
+
+  ('10','10','1','{"1":"43","2":"56"}', '{"1":"6","2":"6","3":"4","4":"2","5":"6","6":"7","7":"10","8":"10","9":"8","10":"10","11":"1"}',
+  '{"1":"25","2":"20","3":"25","4":"20","5":"25","6":"20","7":"25","8":"20"}', null, '43', '98', 'PASSED', '1'),
+
+  ('11','11','1','{"1":"58","2":"34"}', '{"1":"6","2":"6","3":"5","4":"2","5":"6","6":"7","7":"10","8":"6","9":"0","10":"10","11":"10"}',
+   '{"1":"25","2":"20","3":"20","4":"20","5":"20","6":"25","7":"25","8":"20"}', null, '41', '94', 'PASSED', '1'),
+
+  ('12','12','1','{"1":"34","2":"28"}','{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"0","7":"0","8":"0","9":"0","10":"0","11":"0"}',
+   '{"1":"0","2":"0","3":"0","4":"0","5":"0","6":"0","7":"0","8":"0"}', null, '0', '16', 'FAILED', '1'),
+
+  ('13','13','1','{"1":"44","2":"55"}', '{"1":"6","2":"6","3":"8","4":"2","5":"6","6":"5","7":"10","8":"6","9":"8","10":"10","11":"10"}',
+   '{"1":"25","2":"25","3":"25","4":"20","5":"25","6":"20","7":"20","8":"20"}', null, '44', '100', 'PASSED', '1');
+
